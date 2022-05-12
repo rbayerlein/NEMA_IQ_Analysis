@@ -1,0 +1,6 @@
+*.o
+*.asv
+*.png
+*.1
+NEMA_IQ_Ground_Truth*
+Images/
