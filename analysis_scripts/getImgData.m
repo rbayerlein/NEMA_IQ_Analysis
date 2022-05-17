@@ -1,7 +1,9 @@
-function [img_in,img_size, voxel_size]  = getImgData(fname, recon)
+function [img_in, img_size, voxel_size]  = getImgData(fname, recon)
 
 %% standard parameters
 stnd_img_size=[239,239,679];
+img_size = zeros(1,3);
+voxel_size = zeros(1,3);
 stnd_voxel_size = [2.85,2.85,2.85];
 
 fprintf('Reading data from file %s\n recon type: %s\n', fname, recon);
@@ -69,8 +71,25 @@ switch recon
             end % while
         end % flag check
         
-    case 'UIH'              %% %% %% %% %% %% UIH %% %% %% %% %% %%
-        error('UIH input is not available yet!');
+    case 'UIH'              %% %% %% %% %% %% UIH %% %% %% %% %% %%        
+        % get info from dicom header
+        folder = fileparts(fname);
+        dir_contents=dir(fullfile(folder, '*.dcm'));
+        first_slice_fname = [folder,'/',dir_contents(1).name];
+        dcm_info = dicominfo(first_slice_fname);
+        third_slice_fname = [folder,'/',dir_contents(3).name];
+        dcm_info_third = dicominfo(third_slice_fname);
+        
+        img_size(1) = dcm_info.Rows;
+        img_size(2) = dcm_info.Columns;
+        img_size(3) = dcm_info.NumberOfSlices;
+        
+        voxel_size(1) = double(dcm_info.PixelSpacing(1));
+        voxel_size(2) = double(dcm_info.PixelSpacing(2));
+        voxel_size(3) = double(abs(dcm_info.SliceLocation - dcm_info_third.SliceLocation)/2);
+        
+        fprintf('Image size: %dx%dx%d', img_size(1), img_size(2), img_size(3));
+        fprintf('Voxel size: %dx%dx%d', voxel_size(1), voxel_size(2), voxel_size(3));
     otherwise
         error('unknown recon type. abort');
 end % switch
@@ -83,7 +102,27 @@ switch recon
         img_in = reshape(img_in, img_size);
         fclose(fid);
     case 'UIH'              %% %% %% %% %% %% UIH %% %% %% %% %% %%
-        error('UIH input is not available yet!');
+        fprintf('reading in %d dicom slices\n', img_size(3));
+        img_in = zeros(img_size(1), img_size(2), img_size(3));
+        for s = 1 : img_size(3)
+            if rem(s,100) == 0
+                fprintf('%d slices read.\n', s);
+            end
+            fname_slice = [folder,'/',dir_contents(s).name];
+            dcm_info = dicominfo(fname_slice);
+            img_in(:,:,s) = dicomread(fname_slice);
+            img_in = double(img_in);
+            r_slope = double(dcm_info.RescaleSlope);
+            r_intercept = double(dcm_info.RescaleIntercept);
+            img_in(:,:,s) = double(img_in(:,:,s)*r_slope + r_intercept);
+        end
+        fprintf('%d slices read.\n', img_size(3));
+        disp('rotate and mirror image to match in-house recon');
+        % rotate to match orientation of in-house recon data
+        img_in = imrotate3(img_in, 90, [0 0 1]);
+        % mirror image to match view of in-house recon data
+        img_in = flip(img_in,2);
+        
 end % switch
 
 
