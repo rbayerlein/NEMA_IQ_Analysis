@@ -7,13 +7,13 @@ phantom_center = [round(img_size(1)/2), round(img_size(2)/2), center_slice];
 ROI_circle_radius = 57.2;       % in mm
 Bkgr_ROI_circle_radius = 115;   % in mm
 
-if ROI_dimension == 2
-    fprintf('using circular ROIs');
-elseif ROI_dimension == 3
-    fprintf('using spherical ROIs');
-else
-    error('ROI dimension must be 2 or 3!');
-end
+% if ROI_dimension == 2
+%     fprintf('using circular ROIs\n');
+% elseif ROI_dimension == 3
+%     fprintf('using spherical ROIs\n');
+% else
+%     error('ROI dimension must be 2 or 3!');
+% end
 
 %% read image
 fname = ['../../Images/NEMA_IQ_Ground_Truth_', num2str(voxel_size), 'iso.1'];
@@ -27,10 +27,14 @@ figure;
 imshow(slice, []);
 
 if ROI_dimension == 3
-    numel(img_in)
-    img_in = imrotate3(img_in, 90, [0 0 1]);
-    numel(img_in)
+    % rotate each slice because imrotate3 changes number of elements
+    rotated_img = zeros(img_size);
+    for z=1:img_size(3)
+        rotated_img(:,:,z) = rot90(reshape(img_in(:,:,z), [img_size(1), img_size(2)]));
+    end
+    img_in = rotated_img;
 end
+
 
 %% define ROIs on hot spheres
 % diameter
@@ -104,7 +108,6 @@ BG_roi_12 = drawcircle('Center',bkgr_spheres_center(12,[2 1]),'Radius',0.9*spher
 % adjust if necessary (SHOULD NOT BE THE CASE FOR COMPUTER GENERATED
 % IMAGES!!)
 
-pause
 spheres_center(1,[2 1]) = roi_hot_1.Center;
 spheres_center(2,[2 1]) = roi_hot_2.Center;
 spheres_center(3,[2 1]) = roi_hot_3.Center;
@@ -134,11 +137,12 @@ sd_roi_hot = zeros (1,6);
 % activity in hot spheres
 for i=1:6
     if ROI_dimension == 2
-        [ave_roi_hot(i),sd_roi_hot(i),~,~] = roi_circ_sub_2D (slice, spheres_center(i,1), spheres_center(i,2), spheres_diam(i), 1);
+        [ave_roi_hot(i),sd_roi_hot(i),~,~] = roi_circ_sub_2D (slice, spheres_center(i,1), spheres_center(i,2), spheres_diam(i), 0);
     else
-        [ave_roi_hot(i),sd_roi_hot(i),~,~] = voi_sph_sub_3D(img_in, spheres_center(i,1), spheres_center(i,2), center_slice, spheres_diam(i), 1);
+        [ave_roi_hot(i),sd_roi_hot(i),~,~] = voi_sph_sub_3D(img_in, spheres_center(i,1), spheres_center(i,2), center_slice, spheres_diam(i), 0);
     end
 end
+ave_roi_hot
 
 % activity in background
 ave_roi_bkgr = zeros(12,5,6); % spheres, slices, sphere sizes
@@ -148,9 +152,9 @@ for k=1:5 % slices
     for i=1:12 % ROIs per slice
         for j=1:6   % spheres diameters
             if ROI_dimension == 2
-                [ave_roi_bkgr(i, k, j),~,~,~] = roi_circ_sub_2D (slice, bkgr_spheres_center(i,1), bkgr_spheres_center(i,2), spheres_diam(j), 1);
+                [ave_roi_bkgr(i, k, j),~,~,~] = roi_circ_sub_2D (slice, bkgr_spheres_center(i,1), bkgr_spheres_center(i,2), spheres_diam(j), 0);
             else
-                [ave_roi_bkgr(i, k, j),~,~,~] = voi_sph_sub_3D(img_in, bkgr_spheres_center(i,1), bkgr_spheres_center(i,2), center_slice-3+k, spheres_diam(j), 1);
+                [ave_roi_bkgr(i, k, j),~,~,~] = voi_sph_sub_3D(img_in, bkgr_spheres_center(i,1), bkgr_spheres_center(i,2), center_slice-3+k, spheres_diam(j), 0);
             end      
         end
     end

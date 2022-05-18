@@ -9,7 +9,7 @@ subsample_factor = 50;   % factor for subsampling a voxel; applied per dimension
 
 spheres_diam = [10,13,17,22,28,37];     % in mm
 
-sphere_offset_vector = [0 0 0];
+sphere_offset_vector = [0 0 0];       % [0,0,0] means in the center of the voxel
 
 
 %% main

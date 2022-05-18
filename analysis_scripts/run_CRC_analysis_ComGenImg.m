@@ -11,7 +11,7 @@ img_size = round(img_size*voxel_size_scaling_factor);       % in voxels
 spheres_diam = [10,13,17,22,28,37];     % in mm
 sphere_offset_vector=[0,0,0];           % for testing of different sphere 
                                         % placement on underlying image grid
-ROI_dimension = 3;  % 2 means circular ROI, 3 means spherical ROI
+ROI_dimension = 2;  % 2 means circular ROI, 3 means spherical ROI
 
 %% main 
 

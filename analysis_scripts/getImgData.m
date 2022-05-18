@@ -88,8 +88,8 @@ switch recon
         voxel_size(2) = double(dcm_info.PixelSpacing(2));
         voxel_size(3) = double(abs(dcm_info.SliceLocation - dcm_info_third.SliceLocation)/2);
         
-        fprintf('Image size: %dx%dx%d', img_size(1), img_size(2), img_size(3));
-        fprintf('Voxel size: %dx%dx%d', voxel_size(1), voxel_size(2), voxel_size(3));
+        fprintf('Image size: %dx%dx%d\n', img_size(1), img_size(2), img_size(3));
+        fprintf('Voxel size: %dx%dx%d\n', voxel_size(1), voxel_size(2), voxel_size(3));
     otherwise
         error('unknown recon type. abort');
 end % switch
@@ -119,7 +119,9 @@ switch recon
         fprintf('%d slices read.\n', img_size(3));
         disp('rotate and mirror image to match in-house recon');
         % rotate to match orientation of in-house recon data
+        numel(img_in)
         img_in = imrotate3(img_in, 90, [0 0 1]);
+        numel(img_in)
         % mirror image to match view of in-house recon data
         img_in = flip(img_in,2);
         
